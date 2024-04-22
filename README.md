@@ -1,5 +1,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+Pseudo-Boolean Proof Logging
+============================
+
+This version of Kissat is modified to emit proofs of unsatisfiability in the VeriPB-format. 
+
 The Kissat SAT Solver
 =====================
 
