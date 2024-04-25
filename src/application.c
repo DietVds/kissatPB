@@ -488,6 +488,8 @@ static bool parse_options (application *application, int argc,
 #ifndef NPROOFS
     else if (LONG_FALSE_OPTION (arg, "binary"))
       application->binary = -1;
+    else if (LONG_TRUE_OPTION (arg, "defaultprooffile"))
+      application->proof_path = "proof.out";
 #endif
 #ifndef NOPTIONS
     else if (arg[0] == '-' && arg[1] == '-' &&

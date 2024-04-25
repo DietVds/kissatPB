@@ -123,7 +123,9 @@
   OPTION (vivifytier2, 1, 1, 100, "relative tier2 effort") \
   OPTION (walkeffort, 50, 0, 1e6, "effort in per mille") \
   OPTION (walkinitially, 0, 0, 1, "initial local search") \
-  OPTION (warmup, 1, 0, 1, "initialize phases by unit propagation")
+  OPTION (warmup, 1, 0, 1, "initialize phases by unit propagation") \
+  OPTION (noproofheader, 0, 0, 1, "discard the proof header") \
+  OPTION (defaultprooffile, 0, 0, 1, "use proof.out as the proof file") \
 
 // clang-format off
 
