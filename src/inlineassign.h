@@ -12,6 +12,7 @@ static inline void kissat_assign (kissat *solver, const bool probing,
 #endif
                                   bool binary, unsigned lit,
                                   unsigned reason) {
+  // TODO: Check if I need to add unit clauses to the proof.
   const unsigned not_lit = NOT (lit);
 
   watches watches = WATCHES (not_lit);

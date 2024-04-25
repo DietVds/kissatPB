@@ -11,7 +11,7 @@ typedef struct proof proof;
 struct clause;
 struct file;
 
-void kissat_init_proof (struct kissat *, struct file *, bool binary);
+void kissat_init_proof (struct kissat *, struct file *, bool binary, bool noproofheader);
 void kissat_release_proof (struct kissat *);
 
 #ifndef QUIET
@@ -34,6 +34,8 @@ void kissat_delete_external_from_proof (struct kissat *, size_t,
                                         const int *);
 void kissat_delete_internal_from_proof (struct kissat *, size_t,
                                         const unsigned *);
+void kissat_print_solution_to_proof (struct kissat *, int max_var);
+
 
 #define ADD_BINARY_TO_PROOF(A, B) \
   do { \
@@ -99,6 +101,12 @@ void kissat_delete_internal_from_proof (struct kissat *, size_t,
                                          BEGIN_STACK (S)); \
   } while (0)
 
+#define PRINT_SOLUTION_TO_PROOF(MAX_VAR)\
+do { \
+  if (solver->proof) \
+    kissat_print_solution_to_proof (solver, MAX_VAR); \
+} while (0)
+
 #else
 
 #define ADD_BINARY_TO_PROOF(...) \
@@ -135,6 +143,9 @@ void kissat_delete_internal_from_proof (struct kissat *, size_t,
   } while (0)
 #define DELETE_STACK_FROM_PROOF(...) \
   do { \
+  } while (0)
+#define PRINT_SOLUTION_TO_PROOF(...) \
+  do { \ 
   } while (0)
 
 #endif

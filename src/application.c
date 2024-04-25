@@ -26,6 +26,7 @@ struct application {
   const char *proof_path;
   file proof_file;
   int binary;
+  bool noproofheader;
 #endif
 #if !defined(NPROOFS) || !defined(KISSAT_HAS_COMPRESSION)
   bool force;
@@ -488,6 +489,8 @@ static bool parse_options (application *application, int argc,
 #ifndef NPROOFS
     else if (LONG_FALSE_OPTION (arg, "binary"))
       application->binary = -1;
+    else if (LONG_TRUE_OPTION (arg, "noproofheader"))
+      application->noproofheader = true;
     else if (LONG_TRUE_OPTION (arg, "defaultprooffile"))
       application->proof_path = "proof.out";
 #endif
@@ -665,7 +668,7 @@ static bool write_proof (application *application) {
     ERROR ("failed to open and write proof to '%s'", path);
   else if (application->binary < 0)
     binary = false;
-  kissat_init_proof (application->solver, file, binary);
+  kissat_init_proof (application->solver, file, binary, application->noproofheader);
 #ifndef QUIET
   kissat *solver = application->solver;
   kissat_section (solver, "proving");
@@ -808,6 +811,7 @@ static int run_application (kissat *solver, int argc, char **argv,
 #endif
       printf ("s SATISFIABLE\n");
       fflush (stdout);
+      PRINT_SOLUTION_TO_PROOF(application.max_var);
       if (application.witness)
         kissat_print_witness (solver, application.max_var,
                               application.partial);

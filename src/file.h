@@ -52,6 +52,8 @@ static inline int kissat_getc (file *) ATTRIBUTE_ALWAYS_INLINE;
 
 static inline int kissat_putc (file *, int) ATTRIBUTE_ALWAYS_INLINE;
 
+static inline void kissat_put_string(file * file, const char* string) ATTRIBUTE_ALWAYS_INLINE;
+
 static inline void kissat_flush (file *) ATTRIBUTE_ALWAYS_INLINE;
 
 // clang-format on
@@ -109,6 +111,14 @@ static inline int kissat_putc (file *file, int ch) {
     file->bytes++;
   return ch;
 }
+
+static inline void
+kissat_put_string(file * file, const char* string) {
+    for (const char *ptr = string; *ptr != 0; ++ptr) {
+      kissat_putc (file, *ptr);
+    }
+}
+
 
 static inline void kissat_flush (file *file) {
   assert (file);

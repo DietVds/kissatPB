@@ -96,6 +96,8 @@ struct kissat {
 
   termination termination;
 
+  unsigned original_vars;
+
   unsigned vars;
   unsigned size;
   unsigned active;

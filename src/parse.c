@@ -308,6 +308,7 @@ parse_dimacs (kissat * solver, file * file,
 		  "parsed 'p cnf %d %" PRIu64 "' header", variables, clauses);
   *max_var_ptr = variables;
   kissat_reserve (solver, variables);
+  solver->original_vars = variables;
   uint64_t parsed = 0;
   int lit = 0;
   for (;;)
