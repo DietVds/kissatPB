@@ -27,6 +27,7 @@ struct application {
   file proof_file;
   int binary;
   bool noproofheader;
+  bool bufferparseproof;
 #endif
 #if !defined(NPROOFS) || !defined(KISSAT_HAS_COMPRESSION)
   bool force;
@@ -493,6 +494,8 @@ static bool parse_options (application *application, int argc,
       application->noproofheader = true;
     else if (LONG_TRUE_OPTION (arg, "defaultprooffile"))
       application->proof_path = "proof.out";
+    else if(LONG_TRUE_OPTION (arg, "bufferparseproof"))
+      application->bufferparseproof = true;
 #endif
 #ifndef NOPTIONS
     else if (arg[0] == '-' && arg[1] == '-' &&
@@ -546,7 +549,7 @@ static bool parse_options (application *application, int argc,
     else if (arg[0] == '-' && arg[1])
       ERROR ("invalid short option '%s' (try '-h')", arg);
 #ifndef NPROOFS
-    else if (application->proof_path)
+    else if (application->proof_path && application->input_path)
       ERROR ("three file arguments '%s', '%s' and '%s' (try '-h')",
              application->input_path, application->proof_path, arg);
 #endif
@@ -635,6 +638,17 @@ static bool parse_input (application *application) {
   const char *error = kissat_parse_dimacs (
       solver, application->strict, &file, &lineno, &application->max_var);
   kissat_close_file (&file);
+#ifndef NPROOFS  
+  if(application->bufferparseproof){
+    if (!kissat_open_to_write_file (&application->proof_file, application->proof_path))
+      ERROR ("failed to open and write proof to '%s'", path);
+    // WRITE_COMMENT_TO_PROOF ("End Parsing");
+    kissat_end_parsing_proof (solver);
+  }
+  // else{
+  //   WRITE_COMMENT_TO_PROOF ("End Parsing");
+  // }
+#endif
   if (error)
     ERROR ("%s:%" PRIu64 ": parse error: %s", file.path, lineno, error);
 #ifndef QUIET
@@ -664,11 +678,11 @@ static bool write_proof (application *application) {
   if (!strcmp (path, "-")) {
     binary = false;
     kissat_write_already_open_file (file, stdout, "<stdout>");
-  } else if (!kissat_open_to_write_file (file, path))
+  } else if (!application->bufferparseproof && !kissat_open_to_write_file (file, path))
     ERROR ("failed to open and write proof to '%s'", path);
   else if (application->binary < 0)
     binary = false;
-  kissat_init_proof (application->solver, file, binary, application->noproofheader);
+  kissat_init_proof (application->solver, file, binary, application->noproofheader, application->bufferparseproof);
 #ifndef QUIET
   kissat *solver = application->solver;
   kissat_section (solver, "proving");

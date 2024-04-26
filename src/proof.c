@@ -25,6 +25,9 @@ struct proof {
   kissat *solver;
   bool binary;
   file *file;
+  file *parsingbuffer;
+  char* parseproof;
+  size_t parseproof_size;
   ints line;
   uint64_t added;
   uint64_t deleted;
@@ -51,7 +54,7 @@ struct proof {
   LOGINTS3 (SIZE_STACK (proof->line), BEGIN_STACK (proof->line), \
             __VA_ARGS__)
 
-void kissat_init_proof (kissat *solver, file *file, bool binary, bool noproofheader) {
+void kissat_init_proof (kissat *solver, file *file, bool binary, bool noproofheader, bool bufferparseproof) {
   assert (file);
   assert (!solver->proof);
   proof *proof = kissat_calloc (solver, 1, sizeof (struct proof));
@@ -61,10 +64,34 @@ void kissat_init_proof (kissat *solver, file *file, bool binary, bool noproofhea
   solver->proof = proof;
   LOG ("starting to trace %s proof", binary ? "binary" : "non-binary");
 
-  if (!binary && !noproofheader) {
-    kissat_put_string(proof->file, "pseudo-Boolean proof version 2.0\nf\n");
+  if(bufferparseproof){
+    proof->parsingbuffer = malloc(sizeof(struct file));
+    proof->parsingbuffer->file = open_memstream(&proof->parseproof, &proof->parseproof_size);
+    if (!proof->parsingbuffer->file)
+      return false;
+    file->close = true;
+    file->reading = false;
+    file->compressed = false;
+    file->bytes = 0;
+  }
+  else{
+    free (proof->parsingbuffer);
   }
 
+  if (!binary && !noproofheader) {
+    kissat_put_string (proof->parsingbuffer ? proof->parsingbuffer : proof->file, "pseudo-Boolean proof version 2.0\nf\n");
+  }
+
+}
+
+void kissat_end_parsing_proof (struct kissat *solver){
+  solver->proof->parsingbuffer->close = true;
+  kissat_close_file (solver->proof->parsingbuffer);
+  kissat_put_string (solver->proof->file, solver->proof->parseproof);
+  kissat_flush (solver->proof);
+  free (solver->proof->parseproof);
+  free (solver->proof->parsingbuffer);
+  solver->proof->parsingbuffer = NULL;
 }
 
 static void flush_buffer (proof *proof) {
@@ -216,8 +243,8 @@ static void print_non_binary_proof_line (proof *proof) {
     if (pivotLit == 0) {
       pivotLit = elit;
     }
-    kissat_putc (proof->file, '1');
-    kissat_putc (proof->file, ' ');
+    kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, '1');
+    kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, ' ');
 
     char *p = end_of_buffer;
     assert (!*p);
@@ -225,18 +252,18 @@ static void print_non_binary_proof_line (proof *proof) {
     assert (elit != INT_MIN);
     unsigned eidx;
     if (elit < 0) {
-      kissat_putc (proof->file, '~');
+      kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, '~');
       eidx = -elit;
     } else
       eidx = elit;
-    kissat_putc (proof->file, 'x');
+    kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, 'x');
     for (unsigned tmp = eidx; tmp; tmp /= 10)
       *--p = '0' + (tmp % 10);
     while (p != end_of_buffer)
-      kissat_putc (proof->file, *p++);
-    kissat_putc (proof->file, ' ');
+      kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, *p++);
+    kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, ' ');
   }
-  kissat_put_string (proof->file, " >= 1 ;");
+  kissat_put_string (proof->parsingbuffer ? proof->parsingbuffer : proof->file, " >= 1 ;");
 }
 
 static void print_proof_line (proof *proof) {
@@ -256,6 +283,13 @@ static void print_proof_line (proof *proof) {
     flush_buffer (proof);
     kissat_flush (proof->file);
   }
+}
+
+void kissat_write_comment_to_proof (struct kissat * solver, const char* string){
+  kissat_putc (solver->proof->file, '*');
+  kissat_putc (solver->proof->file, ' ');
+  kissat_put_string (solver->proof->file, string);
+  kissat_putc (solver->proof->file, '\n');
 }
 
 #ifndef NDEBUG
@@ -311,7 +345,7 @@ static void print_added_proof_line (proof *proof) {
   if (proof->binary)
     write_char (proof, 'a');
   else {
-    kissat_put_string (proof->file, "red ");
+    kissat_put_string (proof->parsingbuffer ? proof->parsingbuffer : proof->file, "red ");
   }
 
   int pivotLit = 0;
@@ -333,21 +367,21 @@ static void print_added_proof_line (proof *proof) {
         pivotLit = -pivotLit;
       }
 
-      kissat_putc (proof->file, ' ');
-      kissat_putc (proof->file, 'x');
+      kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, ' ');
+      kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, 'x');
       char *p = end_of_buffer;
       for (unsigned tmp = pivotLit; tmp; tmp /= 10)
         *--p = '0' + (tmp % 10);
       while (p != end_of_buffer)
-        kissat_putc (proof->file, *p++);
-      kissat_putc (proof->file, ' ');
-      kissat_putc (proof->file, value);
+        kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, *p++);
+      kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, ' ');
+      kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, value);
     }
 
-    kissat_putc (proof->file, '\n');
+    kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, '\n');
 
     if(!pivotLit){
-      kissat_put_string (proof->file, "output NONE\nconclusion UNSAT : -1\nend pseudo-Boolean proof\n");
+      kissat_put_string (proof->parsingbuffer ? proof->parsingbuffer : proof->file, "output NONE\nconclusion UNSAT : -1\nend pseudo-Boolean proof\n");
     }
   }
 }
@@ -364,12 +398,12 @@ static void print_delete_proof_line (proof *proof) {
     write_char (proof, 'd');
   }
   else{
-    kissat_put_string (proof->file, "del find ");
+    kissat_put_string (proof->parsingbuffer ? proof->parsingbuffer : proof->file, "del find ");
   }
 
   print_proof_line (proof);
   if (!proof->binary)
-    kissat_putc (proof->file, '\n');
+    kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, '\n');
 
 }
 
@@ -408,7 +442,7 @@ void kissat_add_unit_to_proof (kissat *solver, unsigned ilit) {
   assert (EMPTY_STACK (proof->line));
   import_internal_proof_literal (solver, proof, ilit);
   print_added_proof_line (proof);
-  kissat_put_string(proof->file, "core id -1\n");
+  kissat_put_string(proof->parsingbuffer ? proof->parsingbuffer : proof->file, "core id -1\n");
 }
 
 void kissat_shrink_clause_in_proof (kissat *solver, const clause *c,
@@ -468,7 +502,7 @@ kissat_print_solution_to_proof (kissat * solver, int max_var)
 {
   proof *proof = solver->proof;
   if (!proof->binary) {
-    kissat_put_string (proof->file, "sol ");
+    kissat_put_string (proof->parsingbuffer ? proof->parsingbuffer : proof->file, "sol ");
     for (int eidx = 1; eidx <= max_var; eidx++)
     {
       int lit = kissat_value (solver, eidx);
@@ -479,22 +513,22 @@ kissat_print_solution_to_proof (kissat * solver, int max_var)
       char *end_of_buffer = buffer + sizeof buffer;
       *--end_of_buffer = 0;
 
-      kissat_putc (proof->file, ' ');
+      kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, ' ');
       if (lit < 0) {
-        kissat_putc (proof->file, '~');
+        kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, '~');
         lit = -lit;
       }
 
 
-      kissat_putc (proof->file, 'x');
+      kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, 'x');
       char *p = end_of_buffer;
       for (unsigned tmp = lit; tmp; tmp /= 10)
         *--p = '0' + (tmp % 10);
       while (p != end_of_buffer)
-        kissat_putc (proof->file, *p++);
+        kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, *p++);
     }
-    kissat_putc (proof->file, '\n');
-    kissat_put_string (proof->file, "output NONE\nconclusion NONE\nend pseudo-Boolean proof\n");
+    kissat_putc (proof->parsingbuffer ? proof->parsingbuffer : proof->file, '\n');
+    kissat_put_string (proof->parsingbuffer ? proof->parsingbuffer : proof->file, "output NONE\nconclusion NONE\nend pseudo-Boolean proof\n");
   }
 }
 
