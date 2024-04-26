@@ -256,7 +256,7 @@ bool kissat_open_to_read_file (file *file, const char *path) {
   return true;
 }
 
-bool kissat_open_to_write_file (file *file, const char *path) {
+bool kissat_open_to_write_file (file *file, const char *path, bool append) {
 #if defined(KISSAT_HAS_COMPRESSION) && !defined(SAFE)
 #define WRITE_PIPE(SUFFIX, CMD) \
   do { \
@@ -281,7 +281,7 @@ bool kissat_open_to_write_file (file *file, const char *path) {
   WRITE_PIPE (".7z", "7z a -si %s 2>/dev/null");
   WRITE_PIPE (".xz", "xz -c > %s");
 #endif
-  file->file = fopen (path, "w");
+  file->file = fopen (path, append ? "a" : "w");
   if (!file->file)
     return false;
   file->close = true;

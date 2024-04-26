@@ -124,7 +124,7 @@
   OPTION (walkeffort, 50, 0, 1e6, "effort in per mille") \
   OPTION (walkinitially, 0, 0, 1, "initial local search") \
   OPTION (warmup, 1, 0, 1, "initialize phases by unit propagation") \
-  OPTION (noproofheader, 0, 0, 1, "discard the proof header") \
+  OPTION (proofappend, 0, 0, 1, "append the proof to a previously written proof (and discard the proof header)") \
   OPTION (bufferparseproof, 0, 0, 1, "parse the buffer proof and write it only when parsing is completed") \
   OPTION (defaultprooffile, 0, 0, 1, "use proof.out as the proof file") \
 

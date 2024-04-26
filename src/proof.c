@@ -54,7 +54,7 @@ struct proof {
   LOGINTS3 (SIZE_STACK (proof->line), BEGIN_STACK (proof->line), \
             __VA_ARGS__)
 
-void kissat_init_proof (kissat *solver, file *file, bool binary, bool noproofheader, bool bufferparseproof) {
+void kissat_init_proof (kissat *solver, file *file, bool binary, bool proof_append, bool bufferparseproof) {
   assert (file);
   assert (!solver->proof);
   proof *proof = kissat_calloc (solver, 1, sizeof (struct proof));
@@ -78,7 +78,7 @@ void kissat_init_proof (kissat *solver, file *file, bool binary, bool noproofhea
     free (proof->parsingbuffer);
   }
 
-  if (!binary && !noproofheader) {
+  if (!binary && !proof_append) {
     kissat_put_string (proof->parsingbuffer ? proof->parsingbuffer : proof->file, "pseudo-Boolean proof version 2.0\nf\n");
   }
 

@@ -11,7 +11,7 @@ typedef struct proof proof;
 struct clause;
 struct file;
 
-void kissat_init_proof (struct kissat *, struct file *, bool binary, bool noproofheader, bool bufferparseproof);
+void kissat_init_proof (struct kissat *, struct file *, bool binary, bool proof_append, bool bufferparseproof);
 void kissat_release_proof (struct kissat *);
 void kissat_end_parsing_proof (struct kissat *);
 

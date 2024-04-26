@@ -30,7 +30,7 @@ void kissat_read_already_open_file (file *, FILE *, const char *path);
 void kissat_write_already_open_file (file *, FILE *, const char *path);
 
 bool kissat_open_to_read_file (file *, const char *path);
-bool kissat_open_to_write_file (file *, const char *path);
+bool kissat_open_to_write_file (file *, const char *path, bool append);
 
 void kissat_close_file (file *);
 

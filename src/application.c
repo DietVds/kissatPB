@@ -26,7 +26,7 @@ struct application {
   const char *proof_path;
   file proof_file;
   int binary;
-  bool noproofheader;
+  bool proof_append;
   bool bufferparseproof;
 #endif
 #if !defined(NPROOFS) || !defined(KISSAT_HAS_COMPRESSION)
@@ -490,8 +490,8 @@ static bool parse_options (application *application, int argc,
 #ifndef NPROOFS
     else if (LONG_FALSE_OPTION (arg, "binary"))
       application->binary = -1;
-    else if (LONG_TRUE_OPTION (arg, "noproofheader"))
-      application->noproofheader = true;
+    else if (LONG_TRUE_OPTION (arg, "proofappend"))
+      application->proof_append = true;
     else if (LONG_TRUE_OPTION (arg, "defaultprooffile"))
       application->proof_path = "proof.out";
     else if(LONG_TRUE_OPTION (arg, "bufferparseproof"))
@@ -640,7 +640,7 @@ static bool parse_input (application *application) {
   kissat_close_file (&file);
 #ifndef NPROOFS  
   if(application->bufferparseproof){
-    if (!kissat_open_to_write_file (&application->proof_file, application->proof_path))
+    if (!kissat_open_to_write_file (&application->proof_file, application->proof_path, application->proof_append))
       ERROR ("failed to open and write proof to '%s'", path);
     // WRITE_COMMENT_TO_PROOF ("End Parsing");
     kissat_end_parsing_proof (solver);
@@ -678,11 +678,11 @@ static bool write_proof (application *application) {
   if (!strcmp (path, "-")) {
     binary = false;
     kissat_write_already_open_file (file, stdout, "<stdout>");
-  } else if (!application->bufferparseproof && !kissat_open_to_write_file (file, path))
+  } else if (!application->bufferparseproof && !kissat_open_to_write_file (file, path, application->proof_append))
     ERROR ("failed to open and write proof to '%s'", path);
   else if (application->binary < 0)
     binary = false;
-  kissat_init_proof (application->solver, file, binary, application->noproofheader, application->bufferparseproof);
+  kissat_init_proof (application->solver, file, binary, application->proof_append, application->bufferparseproof);
 #ifndef QUIET
   kissat *solver = application->solver;
   kissat_section (solver, "proving");

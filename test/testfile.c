@@ -30,7 +30,7 @@ static void test_file_basic (void) {
   kissat_write_already_open_file (&file, stdout, "<stdout>");
   kissat_close_file (&file);
   assert (
-      !kissat_open_to_write_file (&file, "/root/directory/not-writable"));
+      !kissat_open_to_write_file (&file, "/root/directory/not-writable", false));
   assert (!kissat_file_size ("/root/directory/not-writable"));
 }
 
@@ -198,7 +198,7 @@ static void test_file_write_and_read_compressed (void) {
       file file; \
       const char *path = "42" SUFFIX; \
       printf ("writing single '42' line to compressed '%s'\n", path); \
-      if (!kissat_open_to_write_file (&file, path)) \
+      if (!kissat_open_to_write_file (&file, path, false)) \
         FATAL ("failed to write compressed '%s'", path); \
       else { \
         kissat_putc (&file, '4'); \
