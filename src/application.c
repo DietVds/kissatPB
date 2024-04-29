@@ -500,6 +500,9 @@ static bool parse_options (application *application, int argc,
     else if((valstr = kissat_parse_option_name (arg, "prooffile"))){
       application->proof_path = malloc(strlen(valstr-13));
       strcpy(application->proof_path, valstr);
+      printf("c Prooffile : ");
+      printf(application->proof_path);
+      printf("\n");
     }
     else if(LONG_TRUE_OPTION (arg, "bufferparseproof"))
       application->bufferparseproof = true;
