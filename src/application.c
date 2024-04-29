@@ -497,8 +497,10 @@ static bool parse_options (application *application, int argc,
       application->binary = -1;
     else if (LONG_TRUE_OPTION (arg, "proofappend"))
       application->proof_append = true;
-    else if((valstr = kissat_parse_option_name (arg, "prooffile")))
-      application->proof_path = valstr;
+    else if((valstr = kissat_parse_option_name (arg, "prooffile"))){
+      application->proof_path = malloc(strlen(valstr-13));
+      strcpy(application->proof_path, valstr);
+    }
     else if(LONG_TRUE_OPTION (arg, "bufferparseproof"))
       application->bufferparseproof = true;
 #endif
