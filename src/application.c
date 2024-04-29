@@ -220,6 +220,11 @@ static void print_complete_usage (void) {
       "unless '--partial' is specified, then only values are printed\n");
   printf ("for variables which are necessary to satisfy the formula.\n");
   printf ("\n");
+#ifndef NPROOFS
+  printf("The proof file can also be specified by the following option: \n");
+  printf ("  --prooffile=<path>\n");
+  printf("\n");
+#endif
 #ifndef NOPTIONS
   printf ("The following predefined 'configurations' (option settings) are "
           "supported:\n");
@@ -492,8 +497,8 @@ static bool parse_options (application *application, int argc,
       application->binary = -1;
     else if (LONG_TRUE_OPTION (arg, "proofappend"))
       application->proof_append = true;
-    else if (LONG_TRUE_OPTION (arg, "defaultprooffile"))
-      application->proof_path = "proof.out";
+    else if((valstr = kissat_parse_option_name (arg, "prooffile")))
+      application->proof_path = valstr;
     else if(LONG_TRUE_OPTION (arg, "bufferparseproof"))
       application->bufferparseproof = true;
 #endif
