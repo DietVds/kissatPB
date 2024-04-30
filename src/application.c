@@ -498,7 +498,7 @@ static bool parse_options (application *application, int argc,
     else if (LONG_TRUE_OPTION (arg, "proofappend"))
       application->proof_append = true;
     else if((valstr = kissat_parse_option_name (arg, "prooffile"))){
-      application->proof_path = malloc(strlen(valstr-13));
+      application->proof_path = malloc(strlen(valstr-11));
       strcpy(application->proof_path, valstr);
       printf("c Prooffile : ");
       printf(application->proof_path);
