@@ -837,7 +837,7 @@ static int run_application (kissat *solver, int argc, char **argv,
       fflush (stdout);
       PRINT_SOLUTION_TO_PROOF(application.max_var);
       if (application.witness)
-        kissat_print_witness (solver, application.max_var,
+        kissat_print_witness (solver, solver->original_vars,
                               application.partial);
     }
   }
